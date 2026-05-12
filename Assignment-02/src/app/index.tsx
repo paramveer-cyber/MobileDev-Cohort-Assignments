@@ -232,9 +232,7 @@ export default function Index() {
   const [filteredNotes, setFilteredNotes] = useState(Notes);
   const [filterQuery, setFilterQuery] = useState("");
 
-  useEffect(() => {
-    setFilteredNotes(Notes.filter((item) => item.title.toLowerCase().startsWith(filterQuery.toLowerCase())));
-  }, [filterQuery, Notes]);
+  useEffect(() => {setFilteredNotes(Notes.filter(({ title }) => title.toLowerCase().includes(filterQuery.toLowerCase().trim())));},[filterQuery, Notes]);
 
   const toggleTheme = () => {
     setThemeOverride((prev) => (prev === "system" ? "light" : prev === "light" ? "dark" : "light"));
