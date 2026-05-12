@@ -2,22 +2,35 @@
 
 This is my submission for Assignment 2 of the Chai Aur Code Mobile Development Cohort.
 
-I built a responsive Notes App UI using React Native and Expo with support for:
+I built a responsive Notes App UI using React Native and Expo with support for dark/light themes, responsive layouts, note searching, and a full-screen note editor.
 
-- dark/light themes using useColorScheme()
-- responsive layouts using useWindowDimensions()
-- notes listing using FlatList
-- a full-screen note editor using KeyboardAvoidingView
-- note search/filtering
-- empty-state handling
-- responsive multi-column layouts for larger screens
+## [Demo Video](https://x.com/Paramveer504/status/2054155552658428297)
 
-I used StyleSheet.create() and StyleSheet.flatten() to keep the styling clean and reusable while avoiding unnecessary inline styles.
+## Components Used
 
-I also added:
+- FlatList
+- Text
+- TextInput
+- View
+- Pressable
+- Switch
+- KeyboardAvoidingView
+- ImageBackground
+- SafeAreaView
+- StatusBar
 
-- note title validation before saving
-- themed editor backgrounds using ImageBackground
-- dynamic card layouts with consistent spacing and typography
+## Hooks Used
 
-My main focus was to make the UI feel polished, responsive, and close to a real-world notes application instead of just a basic assignment submission.
+- useState
+- useEffect
+- useColorScheme
+- useWindowDimensions
+
+## Additional Improvements / UI Enhancements
+
+- Responsive multi-column note layout
+- Dark/light theme support
+- Empty-state UI
+- Note validation before saving
+- Responsive full-screen editor
+- Structured reusable styling using `StyleSheet.create()` and `StyleSheet.flatten()`
