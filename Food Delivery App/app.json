@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Assignment-03",
+    "slug": "Assignment-03",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f0f0f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.foodapp.poc"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0f0f0f",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "foodapp" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "foodapp"
+  }
+}
