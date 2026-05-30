@@ -8,7 +8,6 @@ import {
 import { useSnippet } from "@/hooks/useSnippets";
 import { ExportFormat, saveExportLocally, shareExport } from "@/utils/export";
 import { deleteFile, pickAndSaveImage, takePhoto } from "@/utils/fileSystem";
-import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -150,22 +149,13 @@ export default function SnippetDetailScreen() {
   const exportFormats: ExportFormat[] = ["txt", "js", "json"];
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
       >
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Pressable
-              onPress={() => {
-                router.back();
-              }}
-            >
-              <Text style={styles.title}>
-                <Ionicons name="arrow-back" size={24} />
-              </Text>
-            </Pressable>
             <Text style={styles.title}>{snippet.title}</Text>
             <Pressable onPress={handleToggleFavorite} hitSlop={8}>
               <Text style={styles.favIcon}>
