@@ -1,56 +1,67 @@
-# Welcome to your Expo app 👋
+# DevSnippets
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile app for saving and organizing code snippets, built with Expo, React Native, and TypeScript.
 
-## Get started
+## Features
 
-1. Install dependencies
+### Snippet Management
 
-   ```bash
-   npm install
-   ```
+Create, edit, delete, and search snippets. Each snippet stores a title, code content, programming language, and tags. Snippets can be marked as favorites for quick access.
 
-2. Start the app
+### Offline-First Storage
 
-   ```bash
-   npx expo start
-   ```
+All data lives locally in a SQLite database (`devsnippets.db`) via `expo-sqlite`. Every core operation — creating, editing, searching, viewing favorites — works fully offline. There is no required network dependency for any of these features.
 
-In the output, you'll find options to open the app in a
+**Database schema:**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+snippets (id, title, code, language, tags, is_favorite, attachments, created_at, updated_at)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Indexes on `language`, `is_favorite`, and `updated_at` keep queries fast as the collection grows.
 
-### Other setup steps
+### File Management
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Attachments (photos from library or camera) can be added to any snippet and are stored locally via `expo-file-system`. The Files tab lets you browse, download, and delete exported files. Exported files are organized under the app's documents directory.
 
-## Learn more
+### Export & Sharing
 
-To learn more about developing your project with Expo, look at the following resources:
+Snippets can be exported as `.txt`, `.js`, or `.json` — either saved locally to the Files tab or shared to other apps via the native share sheet.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Screens
 
-## Join the community
+- **Home** — browse, search, and manage all snippets
+- **Snippet Detail** — view code, tags, attachments, export options
+- **Create / Edit** — snippet form with language picker and tag input
+- **Favorites** — filtered view of starred snippets
+- **Files** — local file browser for exported snippets
+- **Settings** — storage stats and app info
 
-Join our community of developers creating universal apps.
+## Storage Summary
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Technology      | Usage                          |
+| --------------- | ------------------------------ |
+| SQLite          | Snippet database               |
+| Expo FileSystem | Attachments and exported files |
+
+## Getting Started
+
+```bash
+bun i
+bunx expo start
+```
+
+Open in Expo Go, an iOS simulator, or an Android emulator.
+
+## Project Structure
+
+```
+src/
+  app/          # Screens and navigation (Expo Router)
+  components/   # Shared UI components
+  database/     # SQLite queries
+  hooks/        # Data hooks
+  utils/        # Export and file system helpers
+  types/        # TypeScript types
+  constants/    # Theme
+```
