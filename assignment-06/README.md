@@ -1,58 +1,62 @@
-# Welcome to your Expo app 👋
+# Habit Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Mobile habit tracker built with Expo Router. Create habits, get reminded (locally or via push), keep a streak, and tap a notification to land straight on the right habit.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Create, edit, delete habits — emoji, name, frequency (daily / weekly on chosen weekdays), reminder time
+- Local reminders scheduled on save, cancelled and rescheduled on edit, cancelled (only that habit's) on delete
+- Streak tracking: completing today keeps/grows the streak, missing a day resets it, last 4 weeks shown as a calendar grid
+- Quiet hours: reminders that would land in a muted window get shifted to right after it ends
+- Snooze action on reminder notifications
+- Daily "N habits left" summary notification + app icon badge count
+- Push notifications from a small Node/Express backend — registration, a self-test button, and broadcast sending for streak nudges or announcements
+- Both local and push notifications deep link to the same habit detail screen via a shared `{ screen: "/habit", habitId }` data payload and tap handler
+- Permission-denied state with a button to open system settings, no crashes if permission is refused
 
-   ```bash
-   npm install
-   ```
+## Tech stack
 
-2. Start the app
+Expo SDK 55, Expo Router, React Native 0.83 / React 19, TypeScript, AsyncStorage, `expo-notifications`, `expo-device`, `expo-constants`. Push backend: Express + `expo-server-sdk`.
 
-   ```bash
-   npx expo start
-   ```
+## Project structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+  app/
+    (tabs)/index.tsx       today's habits, done button, streak
+    (tabs)/analytics.tsx   totals, best streak, weekly completion rate
+    (tabs)/settings.tsx    permission status, quiet hours, push token, push server status
+    habit/[id].tsx         habit detail — deep-link target for local and push notifications
+    new.tsx                create / edit habit form
+    _layout.tsx            fonts, Android channel + category setup, notification tap wiring
+  lib/
+    habits/                types, AsyncStorage CRUD, streak/due-date logic, quiet hours
+    notifications/         handler + channel setup, scheduling, push registration, backend calls
+  hooks/
+    use-habits.ts             habit CRUD wired to scheduling + streak decay
+    use-push-notifications.ts permission state, Expo push token, backend registration state
+    use-quiet-hours.ts        quiet hours persistence + reschedule-on-change
+server/
+  server.js               push backend: register/unregister devices, send-test, broadcast send
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Running the app
 
-### Other setup steps
+Local notifications work in Expo Go. Push notifications do not — you need a development build.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm install
+npx expo start          # local-notification testing in Expo Go is fine
+```
 
-## Learn more
+For push, build and install a dev client once:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+bunx eas-cli build --profile development --platform android
+npx expo start --dev-client
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Push notifications
-
-Push notifications need a dev build (Expo Go doesn't support them). Build one with `bunx eas-cli build --profile development --platform android`, install it on a physical device, then run `npx expo start --dev-client`.
-
-Backend lives in `server/`:
+## Push backend
 
 ```bash
 cd server
@@ -60,17 +64,25 @@ npm install
 npm run dev
 ```
 
-Server listens on `PORT` (default `4000`). Set `src/lib/notifications/backend.ts`'s `PUSH_BACKEND_URL` to your machine's LAN IP (e.g. `http://192.168.1.20:4000`) when testing on a physical device — `localhost` only resolves on the same host as the server.
+Listens on `PORT` (default `4000`). Endpoints:
 
-Flow: app registers its Expo push token with `POST /register` once notification permission is granted → Settings tab shows registration status and a "Send test push" button that hits `POST /send-test` with your own token → `POST /send` broadcasts to every registered device, for streak nudges or announcements sent from a script, cURL, or expo.dev/notifications.
+| Route              | Body                           | Purpose                                                                                                             |
+| ------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `POST /register`   | `{ token }`                    | app calls this once it has an Expo push token                                                                       |
+| `POST /unregister` | `{ token }`                    | drop a token                                                                                                        |
+| `POST /send-test`  | `{ token, title, body, data }` | send to one device — used by Settings' "Send test push"                                                             |
+| `POST /send`       | `{ title, body, data }`        | broadcast to every registered device — streak nudges / announcements from a script, cURL, or expo.dev/notifications |
 
-**Why the Android channel is created before requesting permission:** on Android, a notification's importance (whether it can appear as a heads-up alert, make sound, etc.) is fixed by whichever channel it's posted to, and channels are immutable once created with a given importance. If the channel doesn't exist yet when the OS shows the permission prompt or when the first notification fires, Android silently falls back to a default low-importance channel, and reminders end up muted with no heads-up banner even though permission was granted. Creating the `habit-reminders` channel at app startup (see `src/app/_layout.tsx`) guarantees every scheduled reminder lands in a high-importance channel from the first notification onward.
+Sending is entirely server-side; the app never ships a push directly.
 
-**Foreground vs background push:** with the foreground handler in `src/lib/notifications/setup.ts` (`shouldShowBanner: true`), a push arriving while the app is open still surfaces as a banner instead of being silently swallowed — without that handler, foreground pushes are delivered to the app but not shown to the user. When the app is backgrounded or killed, the OS shows the system notification directly; tapping it cold-starts or resumes the app and is picked up by `handleColdStartNotificationResponseAsync` or the live `addNotificationResponseReceivedListener`, both of which route through the same `handleNotificationResponse` deep-link handler used for local reminders.
+If testing on a physical device, point the app at your machine's LAN IP instead of `localhost` — edit `PUSH_BACKEND_URL` in `src/lib/notifications/backend.ts` (e.g. `http://192.168.1.20:4000`). `localhost` on the phone means the phone itself, not your dev machine.
 
-## Join the community
+Flow: permission granted → app gets an Expo push token → registers it with `/register` → Settings tab shows "Server has your token" and lets you fire a test push at yourself, which deep links to your first habit the same way a local reminder would.
 
-Join our community of developers creating universal apps.
+## Notification design notes
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Why the Android notification channel is created before requesting permission.** On Android, a notification's importance — whether it can pop up as a heads-up banner, play sound, etc. — is fixed by the channel it's posted to, and a channel's importance can't be changed once created. If `habit-reminders` doesn't exist yet when the first reminder fires, Android silently posts it to a default low-importance channel instead, and it never shows as a heads-up alert even with permission granted. Creating the channel at app startup, before any permission prompt or scheduling happens, guarantees every reminder from the first one onward lands in a high-importance channel.
+
+**Foreground vs background push.** `Notifications.setNotificationHandler` in `src/lib/notifications/setup.ts` sets `shouldShowBanner: true`, so a push arriving while the app is open still shows a banner — without that handler foreground pushes are delivered silently and never surfaced. When the app is backgrounded or fully killed, the OS shows the system notification on its own; tapping it either resumes the app (handled by the live `addNotificationResponseReceivedListener`) or cold-starts it (handled by `handleColdStartNotificationResponseAsync`, checked once on launch). Both paths funnel into the same `handleNotificationResponse` function that local reminders use, so the deep-link behavior is identical regardless of where the notification came from.
+
+**Local vs push, when to use which.** Local notifications are scheduled entirely on-device and don't need a server or network at fire time — right for habit reminders tied to a time the user picked. Push notifications need a server round-trip and a live token, and are the only option for anything triggered externally: a streak nudge decided by backend logic, an announcement, or anything sent while the app isn't running.
